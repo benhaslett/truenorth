@@ -198,3 +198,36 @@ h1 {
   80% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1); }
 }
+
+/* --- MOBILE RESPONSIVE --- */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+  
+  #app-layout {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .container {
+    width: 100%;
+    padding: 1.5rem;
+  }
+  
+  #sidebar {
+    width: 100%;
+    max-height: none;
+    overflow-y: visible;
+  }
+  
+  #vs-container {
+    gap: 0.5rem;
+  }
+  
+  .value-card {
+    padding: 0.5rem;
+    font-size: 1rem;
+    height: 140px;
+  }
+}
