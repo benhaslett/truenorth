@@ -61,7 +61,11 @@
       </div>
 
       <div id="results" style="display: none;">
-        <h2>Your Core Values</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Your Core Values</h2>
+            <button id="btn-toggle-edit" onclick="toggleEditMode()" class="btn-small">Refine Order ✎</button>
+        </div>
+        
         <div id="top3"></div>
         
         <button id="btn-show-full" onclick="document.getElementById('full-list-container').style.display='block'; this.style.display='none';" class="btn" style="background:#95a5a6; margin:1rem 0;">Show Full Ranking</button>

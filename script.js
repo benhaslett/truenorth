@@ -387,12 +387,44 @@ function renderConflicts() {
   }
 }
 
+let isEditMode = false;
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('btn-toggle-edit');
+  if (isEditMode) {
+    btn.textContent = "Done Reordering ✓";
+    btn.classList.add('active');
+  } else {
+    btn.textContent = "Refine Order ✎";
+    btn.classList.remove('active');
+  }
+  renderResults(); // Re-render to attach drag events
+}
+
 function renderResults() {
   const resultsDiv = document.getElementById('results');
   resultsDiv.style.display = 'block';
 
-  // Sort by RATING (Glicko), not score
-  const ranked = [...values].sort((a, b) => b.rating - a.rating);
+  // Sort logic: 
+  // 1. If manual ranks exist, use them.
+  // 2. Fallback to Glicko rating.
+  const ranked = [...values].sort((a, b) => {
+    // If both have manual rank, compare them
+    if (a.manualRank !== undefined && b.manualRank !== undefined) {
+      return a.manualRank - b.manualRank;
+    }
+    
+    // If ANY item has manualRank, we need to respect that order
+    const hasManual = values.some(v => v.manualRank !== undefined);
+    if (hasManual) {
+        const rA = a.manualRank !== undefined ? a.manualRank : 9999;
+        const rB = b.manualRank !== undefined ? b.manualRank : 9999;
+        if (rA !== rB) return rA - rB;
+    }
+    
+    return b.rating - a.rating;
+  });
   
   const top3Div = document.getElementById('top3');
   top3Div.innerHTML = '';
@@ -400,13 +432,25 @@ function renderResults() {
   const fullListDiv = document.getElementById('full-list');
   fullListDiv.innerHTML = '';
 
+  // Render Top 3
   ranked.slice(0, 3).forEach((v, i) => {
     const el = document.createElement('div');
     el.className = 'top-value';
-    el.innerHTML = `<span>#${i+1} ${v.name}</span> <span>${Math.round(v.rating)}</span>`;
+    if (isEditMode) el.classList.add('draggable-item');
+    el.setAttribute('data-id', v.name);
+    el.draggable = isEditMode;
+    
+    let html = `<span>#${i+1} ${v.name}`;
+    if (v.manualRank !== undefined) html += ` <span class="manual-badge">USER</span>`;
+    html += `</span> <span>${Math.round(v.rating)}</span>`;
+    
+    el.innerHTML = html;
+    
+    if (isEditMode) attachDragEvents(el);
     top3Div.appendChild(el);
   });
 
+  // Render Full List
   const listItems = ranked.slice(3);
   const totalItems = listItems.length;
 
@@ -414,9 +458,102 @@ function renderResults() {
     const el = document.createElement('div');
     const isBottom3 = i >= totalItems - 3;
     el.className = isBottom3 ? 'bottom-value' : 'list-item';
-    el.innerHTML = `<span>#${i+4} ${v.name}</span> <span>${Math.round(v.rating)}</span>`;
+    if (isEditMode) el.classList.add('draggable-item');
+    el.setAttribute('data-id', v.name);
+    el.draggable = isEditMode;
+    
+    let html = `<span>#${i+4} ${v.name}`;
+    if (v.manualRank !== undefined) html += ` <span class="manual-badge">USER</span>`;
+    html += `</span> <span>${Math.round(v.rating)}</span>`;
+    
+    el.innerHTML = html;
+    
+    if (isEditMode) attachDragEvents(el);
     fullListDiv.appendChild(el);
   });
+}
+
+// --- DRAG AND DROP LOGIC ---
+let dragSrcEl = null;
+
+function attachDragEvents(el) {
+  el.addEventListener('dragstart', handleDragStart);
+  el.addEventListener('dragover', handleDragOver);
+  el.addEventListener('dragenter', handleDragEnter);
+  el.addEventListener('dragleave', handleDragLeave);
+  el.addEventListener('drop', handleDrop);
+  el.addEventListener('dragend', handleDragEnd);
+}
+
+function handleDragStart(e) {
+  this.style.opacity = '0.4';
+  dragSrcEl = this;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) e.preventDefault(); // Necessary. Allows us to drop.
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDragEnter(e) {
+  this.classList.add('over');
+}
+
+function handleDragLeave(e) {
+  this.classList.remove('over');
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) e.stopPropagation(); 
+
+  if (dragSrcEl !== this) {
+    const srcName = dragSrcEl.getAttribute('data-id');
+    const targetName = this.getAttribute('data-id');
+    
+    reorderValues(srcName, targetName);
+  }
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+  document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('over'));
+}
+
+function reorderValues(srcName, targetName) {
+  // 1. Get current sorted order
+  let currentOrder = [...values].sort((a, b) => {
+     if (a.manualRank !== undefined && b.manualRank !== undefined) return a.manualRank - b.manualRank;
+     const hasManual = values.some(v => v.manualRank !== undefined);
+     if (hasManual) {
+        const rA = a.manualRank !== undefined ? a.manualRank : 9999;
+        const rB = b.manualRank !== undefined ? b.manualRank : 9999;
+        if (rA !== rB) return rA - rB;
+     }
+     return b.rating - a.rating;
+  });
+  
+  // 2. Find indices
+  const fromIndex = currentOrder.findIndex(v => v.name === srcName);
+  const toIndex = currentOrder.findIndex(v => v.name === targetName);
+  
+  if (fromIndex < 0 || toIndex < 0) return;
+  
+  // 3. Move item
+  const item = currentOrder.splice(fromIndex, 1)[0];
+  currentOrder.splice(toIndex, 0, item);
+  
+  // 4. Update manual ranks
+  currentOrder.forEach((v, index) => {
+    v.manualRank = index + 1;
+  });
+  
+  // 5. Save and Render
+  save();
+  renderResults();
 }
 
 function save() {
