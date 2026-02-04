@@ -387,44 +387,12 @@ function renderConflicts() {
   }
 }
 
-let isEditMode = false;
-
-function toggleEditMode() {
-  isEditMode = !isEditMode;
-  const btn = document.getElementById('btn-toggle-edit');
-  if (isEditMode) {
-    btn.textContent = "Done Reordering ✓";
-    btn.classList.add('active');
-  } else {
-    btn.textContent = "Refine Order ✎";
-    btn.classList.remove('active');
-  }
-  renderResults(); // Re-render to attach drag events
-}
-
 function renderResults() {
   const resultsDiv = document.getElementById('results');
   resultsDiv.style.display = 'block';
 
-  // Sort logic: 
-  // 1. If manual ranks exist, use them.
-  // 2. Fallback to Glicko rating.
-  const ranked = [...values].sort((a, b) => {
-    // If both have manual rank, compare them
-    if (a.manualRank !== undefined && b.manualRank !== undefined) {
-      return a.manualRank - b.manualRank;
-    }
-    
-    // If ANY item has manualRank, we need to respect that order
-    const hasManual = values.some(v => v.manualRank !== undefined);
-    if (hasManual) {
-        const rA = a.manualRank !== undefined ? a.manualRank : 9999;
-        const rB = b.manualRank !== undefined ? b.manualRank : 9999;
-        if (rA !== rB) return rA - rB;
-    }
-    
-    return b.rating - a.rating;
-  });
+  // Sort by RATING (Glicko)
+  const ranked = [...values].sort((a, b) => b.rating - a.rating);
   
   const top3Div = document.getElementById('top3');
   top3Div.innerHTML = '';
@@ -436,17 +404,15 @@ function renderResults() {
   ranked.slice(0, 3).forEach((v, i) => {
     const el = document.createElement('div');
     el.className = 'top-value';
-    if (isEditMode) el.classList.add('draggable-item');
-    el.setAttribute('data-id', v.name);
-    el.draggable = isEditMode;
-    
-    let html = `<span>#${i+1} ${v.name}`;
-    if (v.manualRank !== undefined) html += ` <span class="manual-badge">USER</span>`;
-    html += `</span> <span>${Math.round(v.rating)}</span>`;
-    
-    el.innerHTML = html;
-    
-    if (isEditMode) attachDragEvents(el);
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span>#${i+1} ${v.name}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn-boost" onclick="handleBoost('${v.name}')" title="Boost Ranking">▲</button>
+        <span style="min-width:40px; text-align:right;">${Math.round(v.rating)}</span>
+      </div>
+    `;
     top3Div.appendChild(el);
   });
 
@@ -458,102 +424,27 @@ function renderResults() {
     const el = document.createElement('div');
     const isBottom3 = i >= totalItems - 3;
     el.className = isBottom3 ? 'bottom-value' : 'list-item';
-    if (isEditMode) el.classList.add('draggable-item');
-    el.setAttribute('data-id', v.name);
-    el.draggable = isEditMode;
-    
-    let html = `<span>#${i+4} ${v.name}`;
-    if (v.manualRank !== undefined) html += ` <span class="manual-badge">USER</span>`;
-    html += `</span> <span>${Math.round(v.rating)}</span>`;
-    
-    el.innerHTML = html;
-    
-    if (isEditMode) attachDragEvents(el);
+    el.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span>#${i+4} ${v.name}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn-boost" onclick="handleBoost('${v.name}')" title="Boost Ranking">▲</button>
+        <span style="min-width:40px; text-align:right;">${Math.round(v.rating)}</span>
+      </div>
+    `;
     fullListDiv.appendChild(el);
   });
 }
 
-// --- DRAG AND DROP LOGIC ---
-let dragSrcEl = null;
-
-function attachDragEvents(el) {
-  el.addEventListener('dragstart', handleDragStart);
-  el.addEventListener('dragover', handleDragOver);
-  el.addEventListener('dragenter', handleDragEnter);
-  el.addEventListener('dragleave', handleDragLeave);
-  el.addEventListener('drop', handleDrop);
-  el.addEventListener('dragend', handleDragEnd);
-}
-
-function handleDragStart(e) {
-  this.style.opacity = '0.4';
-  dragSrcEl = this;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/html', this.innerHTML);
-}
-
-function handleDragOver(e) {
-  if (e.preventDefault) e.preventDefault(); // Necessary. Allows us to drop.
-  e.dataTransfer.dropEffect = 'move';
-  return false;
-}
-
-function handleDragEnter(e) {
-  this.classList.add('over');
-}
-
-function handleDragLeave(e) {
-  this.classList.remove('over');
-}
-
-function handleDrop(e) {
-  if (e.stopPropagation) e.stopPropagation(); 
-
-  if (dragSrcEl !== this) {
-    const srcName = dragSrcEl.getAttribute('data-id');
-    const targetName = this.getAttribute('data-id');
-    
-    reorderValues(srcName, targetName);
+function handleBoost(name) {
+  const v = values.find(val => val.name === name);
+  if (v) {
+    v.rating += 15; // +15 points boost
+    // Reduce RD slightly too? Maybe not, manual intervention implies certainty but let's just touch rating.
+    save();
+    renderResults();
   }
-  return false;
-}
-
-function handleDragEnd(e) {
-  this.style.opacity = '1';
-  document.querySelectorAll('.draggable-item').forEach(el => el.classList.remove('over'));
-}
-
-function reorderValues(srcName, targetName) {
-  // 1. Get current sorted order
-  let currentOrder = [...values].sort((a, b) => {
-     if (a.manualRank !== undefined && b.manualRank !== undefined) return a.manualRank - b.manualRank;
-     const hasManual = values.some(v => v.manualRank !== undefined);
-     if (hasManual) {
-        const rA = a.manualRank !== undefined ? a.manualRank : 9999;
-        const rB = b.manualRank !== undefined ? b.manualRank : 9999;
-        if (rA !== rB) return rA - rB;
-     }
-     return b.rating - a.rating;
-  });
-  
-  // 2. Find indices
-  const fromIndex = currentOrder.findIndex(v => v.name === srcName);
-  const toIndex = currentOrder.findIndex(v => v.name === targetName);
-  
-  if (fromIndex < 0 || toIndex < 0) return;
-  
-  // 3. Move item
-  const item = currentOrder.splice(fromIndex, 1)[0];
-  currentOrder.splice(toIndex, 0, item);
-  
-  // 4. Update manual ranks
-  currentOrder.forEach((v, index) => {
-    v.manualRank = index + 1;
-  });
-  
-  // 5. Save and Render
-  save();
-  renderResults();
 }
 
 function save() {

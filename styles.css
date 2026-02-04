@@ -208,35 +208,6 @@ h1 {
   display: flex;
   justify-content: space-between;
   color: #555;
-  background: white; /* Important for drag visual */
-}
-
-/* DRAGGABLE STYLES */
-.draggable-item {
-  cursor: grab;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.draggable-item.dragging {
-  opacity: 0.5;
-  background: #f0f2f5;
-  border: 2px dashed #bdc3c7;
-}
-
-.draggable-item:hover {
-  background-color: #f9f9f9;
-}
-
-/* Manual Rank Indicator */
-.manual-badge {
-  background: #34495e;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 8px;
-  vertical-align: middle;
 }
 
 .bottom-value {
@@ -272,20 +243,30 @@ h1 {
   margin-top: 1rem;
 }
 
-.btn-small {
-  background: transparent;
-  color: #7f8c8d;
-  border: 1px solid #bdc3c7;
-  padding: 4px 10px;
+/* Boost Button */
+.btn-boost {
+  background: #ecf0f1;
+  border: none;
   border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  color: #2ecc71;
+  font-weight: bold;
   font-size: 0.8rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
 }
 
-.btn-small.active {
-  background: #2c3e50;
+.btn-boost:hover {
+  background: #2ecc71;
   color: white;
-  border-color: #2c3e50;
+}
+
+.btn-boost:active {
+  transform: scale(0.95);
 }
 
 @keyframes popIn {
