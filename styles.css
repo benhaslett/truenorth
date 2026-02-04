@@ -1,0 +1,200 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+  margin: 0;
+  color: #333;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+#app-layout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* Main Game Container */
+.container {
+  flex: 2;
+  background: white;
+  padding: 2.5rem; /* More padding */
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 0; /* Flexbox fix */
+}
+
+/* Sidebar */
+#sidebar {
+  flex: 1;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  min-width: 250px;
+  display: none; /* Hidden until conflicts exist */
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+h1 {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+#subtitle {
+  margin-bottom: 2rem;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Progress Bar */
+#progress-container {
+  width: 100%;
+  background-color: #ecf0f1;
+  border-radius: 10px;
+  height: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background-color: #2ecc71;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+#progress-label {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+#encouragement {
+  height: 24px;
+  margin-bottom: 2rem; /* MORE WHITESPACE HERE */
+  font-weight: bold;
+  color: #3498db;
+  font-size: 0.95rem;
+}
+
+/* Game Area */
+#vs-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+}
+
+.value-card {
+  flex: 1;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  
+  /* ANTI-JITTER FIXES */
+  height: 180px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  position: relative; /* For z-index context */
+}
+
+.value-card:hover {
+  transform: translateY(-5px);
+  border-color: #3498db;
+  box-shadow: 0 8px 15px rgba(52, 152, 219, 0.2);
+  z-index: 10;
+}
+
+.value-card.selected {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+#vs {
+  font-weight: 900;
+  color: #95a5a6;
+  font-size: 1.5rem;
+}
+
+/* Results */
+#results {
+  text-align: left;
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.top-value {
+  background: #f1c40f;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  display: flex;
+  justify-content: space-between;
+}
+
+.list-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  color: #555;
+}
+
+.bottom-value {
+  padding: 0.5rem;
+  border-bottom: 1px solid #ffdddd;
+  background-color: #fff5f5;
+  color: #c0392b;
+  display: flex;
+  justify-content: space-between;
+  border-left: 3px solid #e74c3c;
+  margin-top: 2px;
+}
+
+.conflict-item {
+  background: #fff3cd;
+  border-left: 4px solid #f1c40f;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+.btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+@keyframes popIn {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  80% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}

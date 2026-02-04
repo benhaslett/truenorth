@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Values Picker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app-layout">
+    <div class="container">
+      <h1>Values Picker</h1>
+      <p id="subtitle">Discover what truly matters to you</p>
+      
+      <div id="progress-container">
+        <div id="progress-fill"></div>
+      </div>
+      <div id="progress-label">Self-Knowledge: <span id="progress-pct">0</span>%</div>
+      <div id="encouragement"></div>
+      
+      <div id="game-area">
+        <div id="vs-container">
+          <div id="value1" class="value-card"></div>
+          <div id="vs">VS</div>
+          <div id="value2" class="value-card"></div>
+        </div>
+        <!-- Hidden buttons for accessibility/mobile fallbacks if needed -->
+        <div id="buttons" style="display:none;">
+          <button id="choice1">Choose Left</button>
+          <button id="choice2">Choose Right</button>
+        </div>
+      </div>
+
+      <div id="results" style="display: none;">
+        <h2>Your Core Values</h2>
+        <div id="top3"></div>
+        
+        <button id="btn-show-full" onclick="document.getElementById('full-list-container').style.display='block'; this.style.display='none';" class="btn" style="background:#95a5a6; margin:1rem 0;">Show Full Ranking</button>
+        
+        <div id="full-list-container" style="display:none;">
+            <h3>Full Ranking</h3>
+            <div id="full-list"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="sidebar">
+      <h3>Key Conflicts</h3>
+      <p style="font-size:0.8rem; color:#777; margin-bottom:1rem;">Pairs that made you think (>3s)</p>
+      <div id="conflicts-list"></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
