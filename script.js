@@ -410,6 +410,18 @@ function reset() {
 // Global Handlers
 document.getElementById('choice1').onclick = () => handleChoice(0);
 document.getElementById('choice2').onclick = () => handleChoice(1);
+document.getElementById('welcome-start').onclick = () => {
+    document.getElementById('welcome-modal').style.display = 'none';
+    localStorage.setItem('values_app_welcome_seen', 'true');
+};
 
 // Start
 init();
+
+// Check Welcome Screen
+if (!localStorage.getItem('values_app_welcome_seen')) {
+    // Ensure modal is visible (it's visible by default in HTML, but good to be explicit if we changed logic)
+    document.getElementById('welcome-modal').style.display = 'flex';
+} else {
+    document.getElementById('welcome-modal').style.display = 'none';
+}
