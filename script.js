@@ -14,7 +14,7 @@ const INITIAL_VALUES = [
 
 // Constants
 const HARD_CHOICE_THRESHOLD = 10000; // 10 seconds
-const APP_VERSION = "0.7.0"; // Glicko-Lite update!
+const APP_VERSION = "0.7.1"; // Social Share update
 const BUILD_TIME = new Date().toLocaleTimeString();
 
 // Glicko-Lite Config
@@ -128,6 +128,16 @@ function updateProgress() {
     const msg = ENCOURAGEMENTS.slice().reverse().find(m => total >= m.matches);
     if (msg) {
       encDiv.textContent = msg.text;
+    }
+  }
+
+  // Check for Share Unlock (80%+)
+  const shareContainer = document.getElementById('share-container');
+  if (shareContainer) {
+    if (pct >= 80) {
+      shareContainer.style.display = 'block';
+    } else {
+      shareContainer.style.display = 'none';
     }
   }
 }
@@ -415,6 +425,36 @@ function renderResults() {
     `;
     top3Div.appendChild(el);
   });
+  
+  // Inject Share Container if missing
+  let shareContainer = document.getElementById('share-container');
+  if (!shareContainer) {
+    shareContainer = document.createElement('div');
+    shareContainer.id = 'share-container';
+    shareContainer.style.display = 'none'; // Controlled by progress pct
+    shareContainer.style.marginTop = '1.5rem';
+    shareContainer.style.padding = '1rem';
+    shareContainer.style.background = '#eef2f3';
+    shareContainer.style.borderRadius = '8px';
+    
+    shareContainer.innerHTML = `
+      <h3 style="margin-top:0; color:#2c3e50;">Share Your Core Values 🧭</h3>
+      <p style="font-size:0.9rem; color:#7f8c8d;">You've reached >80% confidence!</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <button onclick="shareTwitter()" class="btn" style="background:#1DA1F2; margin:0; padding:8px 16px;">Twitter</button>
+        <button onclick="shareLinkedIn()" class="btn" style="background:#0077b5; margin:0; padding:8px 16px;">LinkedIn</button>
+        <button onclick="copyResults()" class="btn" style="background:#2ecc71; margin:0; padding:8px 16px;">📋 Copy</button>
+      </div>
+    `;
+    
+    // Insert before 'Show Full Ranking'
+    const showFullBtn = document.getElementById('btn-show-full');
+    showFullBtn.parentNode.insertBefore(shareContainer, showFullBtn);
+  }
+  
+  // Clean up old dynamic button if exists (migration)
+  const oldBtn = document.getElementById('btn-share');
+  if (oldBtn) oldBtn.remove();
 
   // Render Full List
   const listItems = ranked.slice(3);
@@ -441,7 +481,6 @@ function handleBoost(name) {
   const v = values.find(val => val.name === name);
   if (v) {
     v.rating += 15; // +15 points boost
-    // Reduce RD slightly too? Maybe not, manual intervention implies certainty but let's just touch rating.
     save();
     renderResults();
   }
@@ -449,6 +488,42 @@ function handleBoost(name) {
 
 function save() {
   localStorage.setItem('values_app_state', JSON.stringify({ values, history, conflicts }));
+}
+
+// Share Functions
+const APP_URL = "https://benhaslett.github.io/truenorth/";
+
+function getTop3Text() {
+  // Safe accessor if values are not ready
+  if(!values || values.length < 3) return "";
+  
+  const ranked = [...values].sort((a, b) => b.rating - a.rating).slice(0, 3);
+  const list = ranked.map((v, i) => `${i + 1}. ${v.name}`).join('\n');
+  return `My Core Values 🧭:\n${list}\n\nDiscover yours: ${APP_URL}`;
+}
+
+function shareTwitter() {
+  const text = encodeURIComponent(getTop3Text());
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+function shareLinkedIn() {
+  // LinkedIn doesn't pre-fill text easily, so we prompt copy first or just link share
+  // Best practice: Let user write their own post, but give them the URL.
+  // Or use a simplistic share URL.
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(APP_URL)}`, '_blank');
+  alert("LinkedIn doesn't allow pre-filled text. We've copied your results to clipboard so you can paste them!");
+  copyResults(false); // Silent copy
+}
+
+function copyResults(alertUser = true) {
+  const text = getTop3Text();
+  navigator.clipboard.writeText(text).then(() => {
+    if (alertUser) alert("Copied Top 3 to clipboard!");
+  }).catch(err => {
+    console.error('Failed to copy: ', err);
+    if(alertUser) alert("Could not copy. Text:\n" + text);
+  });
 }
 
 function reset() {
