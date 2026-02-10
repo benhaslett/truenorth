@@ -491,7 +491,7 @@ function save() {
 }
 
 // Share Functions
-const APP_URL = "https://benhaslett.github.io/truenorth/";
+const APP_URL = "https://truenorthvalues.com";
 
 function getTop3Text() {
   // Safe accessor if values are not ready
